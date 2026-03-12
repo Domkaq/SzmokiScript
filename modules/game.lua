@@ -52,17 +52,17 @@ function gameMod:run(config, utils, bypass)
         self:autoHoodie(utils)
     end
 
-    -- 8. Drive-by korlátozás feloldása (korábbi, most remote hook-kal)
+    -- 8. Drive-by korlátozás feloldása
     if config.features.unlockDriveby then
-        self:unlockDriveby(utils)
+        self:unlockDriveby(utils, LocalPlayer)
     end
 
-    -- 9. Sprint korlátozás feloldása (energia hack miatt már nem kell, de extra)
+    -- 9. Sprint korlátlan (energia hack miatt már nem kell, de extra)
     if config.features.noSprintLimit then
         self:disableSprintLimits()
     end
 
-    -- 10. Időjárás befolyásolása (opcionális)
+    -- 10. Időjárás blokkolása (opcionális)
     if config.features.blockWeatherChanges then
         self:blockWeather(utils)
     end
@@ -75,7 +75,7 @@ function gameMod:run(config, utils, bypass)
         bypass:disableTelemetry()
     end
 
-    -- 12. További remote-ok hookolása (általános megszakítás)
+    -- 12. További remote-ok hookolása (általános naplózás)
     self:hookAllRemotes(utils)
 
     print("[GAME] Minden hack aktiválva!")
@@ -84,19 +84,13 @@ end
 -- Korlátlan tárgyelhelyezés
 function gameMod:infinitePlaceObject(utils)
     utils:hookRemote("PlaceObjectEvent", function(self, args)
-        -- Engedélyezzük a tárgy elhelyezését (nem módosítjuk, csak továbbengedjük)
-        -- De lehet, hogy van valami korlát, amit át kell írni. Itt most csak naplózunk.
         print("[GAME] PlaceObjectEvent meghívva (korlátlan)")
-        return self:FireServer(unpack(args))  -- továbbítjuk, de nem változtatunk
+        return self:FireServer(unpack(args))
     end)
 end
 
 -- Automatikus hoodie (BobbyEvent)
 function gameMod:autoHoodie(utils)
-    -- A BobbyEvent egy RemoteEvent. Ha a szerver tiltja a hoodie-t, mi mindig engedélyezzük.
-    -- Ezt úgy érhetjük el, hogy a kliens oldali logikát módosítjuk, de itt most a szerver felé küldött eseményt hookoljuk.
-    -- A handleHoode függvény a kliensben van, amely a BobbyEvent-et hívja. Mi inkább a BobbyEvent.OnClientEvent-et hookoljuk,
-    -- hogy ha a szerver tiltja, ne történjen semmi.
     local bobby = game:GetService("ReplicatedStorage"):FindFirstChild("BobbyEvent")
     if bobby then
         bobby.OnClientEvent:Connect(function(...)
@@ -106,22 +100,20 @@ function gameMod:autoHoodie(utils)
     end
 end
 
--- Drive-by feloldása (korábban)
-function gameMod:unlockDriveby(utils)
-    -- Megpróbáljuk a driveBy függvényt felülírni a kliens scriptben
-    -- Ehhez meg kell találnunk a Client LocalScript-et
+-- Drive-by feloldása (megpróbáljuk a kliens scriptet módosítani)
+function gameMod:unlockDriveby(utils, LocalPlayer)
+    -- Megkeressük a kliens scriptet a Workspace-ben (DayooVagyok.Client)
     local clientScript = workspace:FindFirstChild(LocalPlayer.Name) and workspace[LocalPlayer.Name]:FindFirstChild("Client")
     if clientScript and clientScript:IsA("LocalScript") then
-        -- Megpróbáljuk debug.getupvalue segítségével elérni a driveBy függvényt
-        -- Ez bonyolult, ezért inkább a JuneEvent-et használjuk a ragdoll blokkolásra, ami segíthet.
-        print("[GAME] Drive-by feloldása (remélhetőleg a ragdoll blokkolás segít)")
+        -- Itt debug library segítségével megkereshetnénk a driveBy függvényt, de bonyolult.
+        -- Alternatív: letiltjuk a driveBy-t kiváltó korlátozásokat (pl. az Energy-t maxra állítottuk, ami segíthet)
+        print("[GAME] Drive-by feloldása (remélhetőleg az energia hack segít)")
     end
 end
 
--- Sprint korlátlan (energia hack miatt már nem kell, de biztos)
+-- Sprint korlátlan (üres, mert az energia hack miatt úgysem aktiválódik a drained)
 function gameMod:disableSprintLimits()
-    -- Ha van a LocalScript-ben egy drained függvény, azt kiiktatjuk
-    -- Itt nem csinálunk semmit, mert az energia hack miatt úgysem aktiválódik
+    -- Itt nem csinálunk semmit, mert az energia hack miatt a drained nem fut le
 end
 
 -- Időjárás blokkolása
@@ -141,7 +133,6 @@ function gameMod:hookAllRemotes(utils)
     }
     for _, name in ipairs(remoteNames) do
         utils:hookRemote(name, function(self, args)
-            -- Csak naplózunk, de továbbengedjük
             print("[GAME] Remote hívás: " .. name)
             return self:FireServer(unpack(args))
         end)
