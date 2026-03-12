@@ -1,33 +1,52 @@
 -- =====================================================
--- SZMOKI 420 - KONFIGURÁCIÓ
+-- SZMOKI 420 - KONFIGURÁCIÓ (BŐVÍTETT)
 -- =====================================================
 
 return {
     -- Alap adatok
     firstName = "SZMOKI",
     lastName = "420",
-    
-    -- Bőrszín (automatikusan a legsötétebbet választja)
-    skinTone = "auto",  -- "auto" vagy konkrét név: "pale", "light", "medium", "brown", "dark", "darker"
-    
-    -- Cipő
-    shoe = "whiteNavy1s",  -- "whiteNavy1s" vagy "blackNavy1s"
-    
-    -- Attribútumok
-    attributes = {
-        Strength = 100,
-        Stamina = 100,
-        Smarts = 100,
-        Stress = 100
+    skinTone = "auto",               -- "auto" vagy konkrét név
+    shoe = "whiteNavy1s",             -- "whiteNavy1s" vagy "blackNavy1s"
+    adminRank = "Admin",               -- "Player", "Admin", "Mod", stb.
+
+    -- Pénz
+    currency = {
+        Cash = 999999,
+        Bank = 999999,
+        Dirty = 0
     },
-    
-    -- Extra funkciók
+
+    -- Alapvető attribútumok (energia, éhség, stamina)
+    attributes = {
+        Energy = 100,
+        Hunger = 100,
+        Stamina = 100
+    },
+
+    -- Funkciók kapcsolói
     features = {
-        autoSkinTone = true,      -- Automatikus legsötétebb bőr
-        unlockShoes = true,       -- Cipők feloldása
-        unlockMarkings = true,    -- Markings feloldása
-        infinitePoints = true,    -- Végtelen pontok (UI)
-        kickProtection = true,     -- Kick védelem
-        autoContinue = true        -- Continue gomb automatikus megjelenítése
+        -- Karakteralkotó
+        autoSkinTone = true,
+        unlockShoes = true,
+        unlockMarkings = true,
+        infinitePoints = true,
+        autoContinue = true,
+
+        -- Játék
+        infiniteEnergy = true,
+        unlockDriveby = true,
+        noSprintLimit = true,
+
+        -- Új funkciók (alapértelmezetten BE)
+        noCameraShake = true,           -- Kamera rázás kikapcsolása
+        noRagdoll = true,               -- Ragdoll blokkolása (JuneEvent, CombatEvent)
+        infinitePlaceObject = true,      -- Korlátlan tárgyelhelyezés
+        autoHoodie = true,               -- Hoodie automatikus kezelése (BobbyEvent)
+        blockWeatherChanges = false,     -- Időjárás változások blokkolása (opcionális)
+
+        -- Általános védelem
+        kickProtection = true,
+        antiBan = true                   -- Telemetria tiltás
     }
 }
