@@ -54,32 +54,52 @@ function utils:disableCameraShake()
         local oldRequire = require(shaker)
         if oldRequire and type(oldRequire) == "table" then
             -- Feltételezzük, hogy van egy Shake metódus
-            oldRequier.Shake = function() end
-            oldRequier.StartShaking = function() end
-            oldRequier.StopShaking = function() end
+            oldRequire.Shake = function() end
+            oldRequire.StartShaking = function() end
+            oldRequire.StopShaking = function() end
             print("[UTILS] Kamera rázás letiltva")
         end
     end
 end
 
--- Legsötétebb bőrszín (korábbiból)
+-- Legsötétebb bőrszín kiválasztása a modulból
 function utils:getDarkestSkin(appearanceModule)
-    -- ... (ugyanaz, mint korábban)
+    local skinTones = appearanceModule.skintones
+    local darkest, darkestValue = nil, 999
+    for name, color in pairs(skinTones) do
+        local brightness = color.R + color.G + color.B
+        if brightness < darkestValue then
+            darkestValue = brightness
+            darkest = name
+        end
+    end
+    return darkest or "darker"
 end
 
--- Pénz hack
+-- Pénz hack (attribútumok módosítása)
 function utils:hackCurrency(currencyObj, config)
-    -- ... (ugyanaz)
+    if not currencyObj then return end
+    currencyObj:SetAttribute("Cash", config.currency.Cash)
+    currencyObj:SetAttribute("Bank", config.currency.Bank)
+    currencyObj:SetAttribute("Dirty", config.currency.Dirty)
+    print("[CURRENCY] Pénz beállítva: Cash=" .. config.currency.Cash .. " Bank=" .. config.currency.Bank)
 end
 
 -- AdminRank hack
 function utils:hackAdminRank(adminRankObj, rank)
-    -- ... (ugyanaz)
+    if adminRankObj and adminRankObj:IsA("StringValue") then
+        adminRankObj.Value = rank
+        print("[ADMIN] Rang beállítva: " .. rank)
+    end
 end
 
--- Attribútumok hackelése
+-- Attribútumok hackelése (Energy, Hunger, Stamina)
 function utils:hackAttributes(attrFolder, config)
-    -- ... (ugyanaz)
+    if not attrFolder then return end
+    for k, v in pairs(config.attributes) do
+        attrFolder:SetAttribute(k, v)
+    end
+    print("[ATTRIBUTES] Energia/Éhség/Stamina beállítva")
 end
 
 return utils
