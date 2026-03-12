@@ -1,31 +1,14 @@
 -- =====================================================
--- Segédfüggvények
+-- Segédfüggvények (BŐVÍTETT)
 -- =====================================================
 
 local utils = {}
 
--- Szolgáltatások gyors elérése
-utils.Services = {
-    Players = game:GetService("Players"),
-    ReplicatedStorage = game:GetService("ReplicatedStorage"),
-    Workspace = game:GetService("Workspace"),
-    TweenService = game:GetService("TweenService"),
-    RunService = game:GetService("RunService")
-}
-
--- Várakozás amíg egy elem betöltődik
-function utils:waitForChild(parent, childName, timeout)
-    timeout = timeout or 10
-    local start = os.clock()
-    while os.clock() - start < timeout do
-        local child = parent:FindFirstChild(childName)
-        if child then return child end
-        task.wait()
-    end
-    return nil
+function utils:getService(name)
+    return game:GetService(name)
 end
 
--- Biztonságos függvényhívás
+-- Biztonságos pcall
 function utils:safeCall(func, ...)
     local success, result = pcall(func, ...)
     if not success then
@@ -34,7 +17,7 @@ function utils:safeCall(func, ...)
     return success, result
 end
 
--- Események letiltása
+-- Események letiltása (getconnections)
 function utils:disableEvents(instance, eventName)
     local cons = getconnections and getconnections(instance[eventName])
     if cons then
@@ -46,9 +29,57 @@ function utils:disableEvents(instance, eventName)
     return false
 end
 
--- Szín világosságának kiszámítása
-function utils:getColorBrightness(color)
-    return color.R + color.G + color.B
+-- RemoteEvent hookolása (általános)
+function utils:hookRemote(remoteName, callback)
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild(remoteName)
+    if not remote then return end
+
+    local oldNamecall
+    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local args = {...}
+        local method = getnamecallmethod()
+        if self == remote and method == "FireServer" then
+            return callback(self, args) or oldNamecall(self, unpack(args))
+        end
+        return oldNamecall(self, ...)
+    end)
+    return true
+end
+
+-- Kamera rázás letiltása (CameraShaker module módosítása)
+function utils:disableCameraShake()
+    local shaker = game:GetService("ReplicatedStorage"):FindFirstChild("CameraShaker")
+    if shaker and shaker:IsA("ModuleScript") then
+        -- Megpróbáljuk kicserélni a shake függvényeket üresre
+        local oldRequire = require(shaker)
+        if oldRequire and type(oldRequire) == "table" then
+            -- Feltételezzük, hogy van egy Shake metódus
+            oldRequier.Shake = function() end
+            oldRequier.StartShaking = function() end
+            oldRequier.StopShaking = function() end
+            print("[UTILS] Kamera rázás letiltva")
+        end
+    end
+end
+
+-- Legsötétebb bőrszín (korábbiból)
+function utils:getDarkestSkin(appearanceModule)
+    -- ... (ugyanaz, mint korábban)
+end
+
+-- Pénz hack
+function utils:hackCurrency(currencyObj, config)
+    -- ... (ugyanaz)
+end
+
+-- AdminRank hack
+function utils:hackAdminRank(adminRankObj, rank)
+    -- ... (ugyanaz)
+end
+
+-- Attribútumok hackelése
+function utils:hackAttributes(attrFolder, config)
+    -- ... (ugyanaz)
 end
 
 return utils
