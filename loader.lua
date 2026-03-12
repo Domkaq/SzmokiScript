@@ -7,10 +7,9 @@ local loader = {}
 
 -- Konfiguráció
 loader.GITHUB_RAW = "https://raw.githubusercontent.com/TE_FELHASZNALOD/SzmokiScript/main/"
-loader.VERSION = "2.0.0"
-loader.AUTO_UPDATE = true
+loader.VERSION = "3.1.0"
 
--- Színek a konzolhoz
+-- Színes naplózás
 loader.colors = {
     red = "\30[31m",
     green = "\30[32m",
@@ -19,35 +18,23 @@ loader.colors = {
     reset = "\30[37m"
 }
 
--- Logger függvény
 function loader:log(msg, color)
     color = color or self.colors.green
     print(color .. "[SZMOKI] " .. msg .. self.colors.reset)
-end
-
--- Hibakezelés
-function loader:pcall(func, ...)
-    local success, result = pcall(func, ...)
-    if not success then
-        self:log("Hiba: " .. tostring(result), self.colors.red)
-    end
-    return success, result
 end
 
 -- Modul betöltése GitHub-ról
 function loader:loadModule(moduleName)
     local url = self.GITHUB_RAW .. "modules/" .. moduleName .. ".lua"
     self:log("Modul betöltése: " .. moduleName)
-    
     local success, module = pcall(function()
         return loadstring(game:HttpGet(url))()
     end)
-    
     if success then
         self:log("✓ " .. moduleName .. " betöltve", self.colors.green)
         return module
     else
-        self:log("✗ " .. moduleName .. " betöltése sikertelen: " .. tostring(module), self.colors.red)
+        self:log("✗ " .. moduleName .. " hiba: " .. tostring(module), self.colors.red)
         return nil
     end
 end
@@ -58,22 +45,43 @@ function loader:loadConfig()
     local success, config = pcall(function()
         return loadstring(game:HttpGet(url))()
     end)
-    
     if success then
         self.config = config
         self:log("Konfiguráció betöltve")
     else
-        self:log("Konfiguráció betöltése sikertelen, alapértelmezett használata", self.colors.yellow)
+        self:log("Konfiguráció nem elérhető, alapértelmezett beállítások", self.colors.yellow)
         self.config = {
             firstName = "SZMOKI",
             lastName = "420",
-            skinTone = "darker",      -- legsötétebb bőr
+            skinTone = "auto",
             shoe = "whiteNavy1s",
+            adminRank = "Admin",
+            currency = {
+                Cash = 999999,
+                Bank = 999999,
+                Dirty = 0
+            },
             attributes = {
-                Strength = 100,
-                Stamina = 100,
-                Smarts = 100,
-                Stress = 100
+                Energy = 100,
+                Hunger = 100,
+                Stamina = 100
+            },
+            features = {
+                autoSkinTone = true,
+                unlockShoes = true,
+                unlockMarkings = true,
+                infinitePoints = true,
+                kickProtection = true,
+                autoContinue = true,
+                infiniteEnergy = true,
+                unlockDriveby = true,
+                noSprintLimit = true,
+                noCameraShake = true,
+                noRagdoll = true,
+                infinitePlaceObject = true,
+                autoHoodie = true,
+                blockWeatherChanges = false,
+                antiBan = true
             }
         }
     end
@@ -83,65 +91,44 @@ end
 function loader:detectGameState()
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
-    
-    -- Várakozás a PlayerGui-ra
     repeat task.wait() until LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
     
-    -- Karakteralkotó érzékelés
-    local inCreator = LocalPlayer.PlayerGui:FindFirstChild("CreationGUI") ~= nil
-    
-    -- Játékban vagyunk-e (karakter létezik)
-    local inGame = LocalPlayer.Character ~= nil and LocalPlayer.Character:FindFirstChild("Humanoid") ~= nil
-    
-    if inCreator then
+    if LocalPlayer.PlayerGui:FindFirstChild("CreationGUI") then
         return "CREATOR"
-    elseif inGame then
+    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         return "GAME"
     else
         return "UNKNOWN"
     end
 end
 
--- Fő inicializálás
+-- Fő indítás
 function loader:init()
     self:log("======================================", self.colors.blue)
     self:log("SZMOKI 420 LOADER v" .. self.VERSION, self.colors.blue)
     self:log("======================================", self.colors.blue)
-    
-    -- Konfiguráció betöltése
+
     self:loadConfig()
-    
-    -- Segédmodulok betöltése
     self.utils = self:loadModule("utils")
-    
-    -- Játék állapot érzékelése
+    self.bypass = self:loadModule("bypass")
+
     local state = self:detectGameState()
     self:log("Játék állapot: " .. state)
-    
-    -- Állapot alapú modulok betöltése
+
     if state == "CREATOR" then
-        self:log("Karakteralkotó mód aktiválva")
-        self.creator = self:loadModule("characterCreator")
-        if self.creator then
-            self:pcall(self.creator.run, self.creator, self.config)
-        end
+        local creator = self:loadModule("characterCreator")
+        if creator then creator:run(self.config, self.utils, self.bypass) end
     elseif state == "GAME" then
-        self:log("Játék mód aktiválva")
-        self.game = self:loadModule("game")
-        if self.game then
-            self:pcall(self.game.run, self.game, self.config)
-        end
+        local gameMod = self:loadModule("game")
+        if gameMod then gameMod:run(self.config, self.utils, self.bypass) end
     else
         self:log("Ismeretlen állapot, várakozás...", self.colors.yellow)
-        -- Várakozás és újrapróbálkozás
         task.wait(3)
         self:init()
     end
-    
+
     self:log("Loader inicializálva!")
 end
 
--- Loader indítása
 loader:init()
-
 return loader
