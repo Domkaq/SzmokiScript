@@ -6,7 +6,7 @@ return {
     -- Alap adatok
     firstName = "SZMOKI",
     lastName = "420",
-    skinTone = "auto",               -- "auto" vagy konkrét név
+    skinTone = "auto",               -- "auto" vagy konkrét név: "pale", "light", "medium", "brown", "dark", "darker"
     shoe = "whiteNavy1s",             -- "whiteNavy1s" vagy "blackNavy1s"
     adminRank = "Admin",               -- "Player", "Admin", "Mod", stb.
 
@@ -38,7 +38,7 @@ return {
         unlockDriveby = true,
         noSprintLimit = true,
 
-        -- Új funkciók (alapértelmezetten BE)
+        -- Új funkciók
         noCameraShake = true,           -- Kamera rázás kikapcsolása
         noRagdoll = true,               -- Ragdoll blokkolása (JuneEvent, CombatEvent)
         infinitePlaceObject = true,      -- Korlátlan tárgyelhelyezés
